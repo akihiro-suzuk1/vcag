@@ -124,7 +124,7 @@ describe("getWebviewContent", () => {
       "3D"
     );
     expect(html).toContain('id="toggle-dim"');
-    expect(html).toContain("XY 2D で表示");
+    expect(html).toContain("Show as XY 2D");
     // dataDim === '3D' なのでボタンが表示される
     expect(html).toContain("dataDim === '3D'");
   });

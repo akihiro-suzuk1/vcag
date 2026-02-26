@@ -21,7 +21,7 @@ export function getWebviewContent(
   const data = JSON.stringify(coords);
 
   return /* html */ `<!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta
@@ -75,9 +75,9 @@ export function getWebviewContent(
 </head>
 <body>
   <div id="toolbar">
-    <button id="toggle-dim">XY 2D で表示</button>
-    <label><input type="checkbox" id="connect-lines" /> 線でつなぐ</label>
-    <label><input type="checkbox" id="close-loop" disabled /> 始点と終点を結ぶ</label>
+    <button id="toggle-dim">Show as XY 2D</button>
+    <label><input type="checkbox" id="connect-lines" /> Connect lines</label>
+    <label><input type="checkbox" id="close-loop" disabled /> Close loop</label>
   </div>
   <div id="chart"></div>
   <script nonce="${nonce}" src="${plotlyUri}"></script>
@@ -99,7 +99,7 @@ export function getWebviewContent(
 
     toggleBtn.addEventListener('click', () => {
       currentViewAs = currentViewAs === '3D' ? '2D' : '3D';
-      toggleBtn.textContent = currentViewAs === '3D' ? 'XY 2D で表示' : '3D で表示';
+      toggleBtn.textContent = currentViewAs === '3D' ? 'Show as XY 2D' : 'Show as 3D';
       render(${data}, currentViewAs);
     });
 
@@ -181,7 +181,7 @@ export function getWebviewContent(
       const msg = event.data;
       if (msg.type === 'render') {
         currentViewAs = msg.dim;
-        toggleBtn.textContent = currentViewAs === '3D' ? 'XY 2D で表示' : '3D で表示';
+        toggleBtn.textContent = currentViewAs === '3D' ? 'Show as XY 2D' : 'Show as 3D';
         toggleBtn.style.display = msg.dim === '3D' ? 'inline-block' : 'none';
         render(msg.coords, msg.dim);
       }

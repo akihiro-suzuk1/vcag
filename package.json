@@ -3,6 +3,7 @@
   "displayName": "VCAG",
   "description": "A VS Code extension powered by AI",
   "version": "0.0.1",
+  "license": "MIT",
   "publisher": "a-suzuki",
   "engines": {
     "vscode": "^1.96.0"
@@ -16,7 +17,7 @@
     "commands": [
       {
         "command": "coordGraph.showFromSelection",
-        "title": "Coord Graph: 選択範囲から座標を表示"
+        "title": "Coord Graph: Plot Coordinates from Selection"
       }
     ]
   },

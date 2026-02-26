@@ -10,20 +10,20 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
-        vscode.window.showWarningMessage("アクティブなエディタがありません");
+        vscode.window.showWarningMessage("No active editor");
         return;
       }
 
       const selection = editor.selection;
       const text = editor.document.getText(selection);
       if (!text) {
-        vscode.window.showWarningMessage("テキストが選択されていません");
+        vscode.window.showWarningMessage("No text selected");
         return;
       }
 
       const coords = extractCoordinates(text);
       if (coords.length === 0) {
-        vscode.window.showWarningMessage("座標が見つかりませんでした");
+        vscode.window.showWarningMessage("No coordinates found");
         return;
       }
 

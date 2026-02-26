@@ -1,57 +1,57 @@
 # VCAG — View Coordinates As Graph
 
-VS Code 上でテキスト中の座標データを選択し、グラフとして可視化する拡張機能です。
+A VS Code extension that extracts coordinate data from selected text and visualizes it as an interactive graph.
 
-## 使い方
+## Usage
 
-1. エディタ上で座標データを含むテキストを選択
-2. コマンドパレット (`Cmd+Shift+P`) から **Coord Graph: 選択範囲から座標を表示** を実行
-3. Webview パネルにグラフが表示される
+1. Select text containing coordinate data in the editor
+2. Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`) and run **Coord Graph: Plot Coordinates from Selection**
+3. A graph appears in a Webview panel
 
-## 対応フォーマット
+## Supported Formats
 
 ```
-# タプル配列
+# Tuple arrays
 (35.68, 139.76), (35.69, 139.77)
 
-# JSON 配列
+# JSON arrays
 [[1, 2], [3, 4], [5, 6]]
 
-# CSV 風
+# CSV-like
 10.0, 20.0
 12.5, 22.3
 15.0, 25.1
 
-# ラベル付き
+# Labeled
 x: 1.0, y: 2.0
 x: 3.0, y: 4.0
 
-# 指数表記
+# Scientific notation
 1.5e2, 3.0e-1
 ```
 
-2D / 3D どちらも自動判定します。
+Both 2D and 3D coordinates are automatically detected.
 
-## 表示機能
+## Features
 
-- **2D / 3D 切り替え** — 3D データの場合、ボタンで XY 2D 表示に切り替え可能
-- **線でつなぐ** — プロット点を順番に線で接続して軌跡を確認
-- **始点と終点を結ぶ** — 閉曲線として表示
+- **2D / 3D toggle** — Switch between XY 2D and 3D views for 3D data
+- **Connect lines** — Draw lines between points in order to trace the path
+- **Close loop** — Connect the last point back to the first to form a closed shape
 
-## インストール
+## Installation
 
 ```
 code --install-extension vcag-0.0.1.vsix
 ```
 
-または VS Code の Extensions ビューから `...` → **Install from VSIX...** で `.vsix` ファイルを指定してください。
+Or in VS Code: Extensions view → `...` → **Install from VSIX...** and select the `.vsix` file.
 
-## 開発
+## Development
 
 ```bash
 npm install
-npm run compile   # ビルド
-npm test          # テスト
+npm run compile   # Build
+npm test          # Test
 ```
 
 ## License
