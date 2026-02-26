@@ -7,13 +7,12 @@ export function getWebviewContent(
   coords: number[][],
   dim: "2D" | "3D"
 ): string {
-  const chartJsUri = webview.asWebviewUri(
+  const plotlyUri = webview.asWebviewUri(
     vscode.Uri.joinPath(
       extensionUri,
       "node_modules",
-      "chart.js",
-      "dist",
-      "chart.umd.js"
+      "plotly.js-dist-min",
+      "plotly.min.js"
     )
   );
 
@@ -27,69 +26,69 @@ export function getWebviewContent(
   <meta charset="UTF-8" />
   <meta
     http-equiv="Content-Security-Policy"
-    content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}';"
+    content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline';"
   />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Coord Graph</title>
-  <style nonce="${nonce}">
+  <style>
     body {
       margin: 0;
       padding: 16px;
       background: var(--vscode-editor-background);
       color: var(--vscode-editor-foreground);
     }
-    canvas {
-      max-width: 100%;
-      max-height: 90vh;
+    #chart {
+      width: 100%;
+      height: 90vh;
     }
   </style>
 </head>
 <body>
-  <canvas id="chart"></canvas>
-  <script nonce="${nonce}" src="${chartJsUri}"></script>
+  <div id="chart"></div>
+  <script nonce="${nonce}" src="${plotlyUri}"></script>
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
 
     function render(coords, dim) {
-      const ctx = document.getElementById('chart').getContext('2d');
       const fg = getComputedStyle(document.body)
         .getPropertyValue('--vscode-editor-foreground').trim() || '#cccccc';
+      const bg = getComputedStyle(document.body)
+        .getPropertyValue('--vscode-editor-background').trim() || '#1e1e1e';
 
-      const dataPoints = coords.map(c => ({ x: c[0], y: c[1] }));
+      const is3D = dim === '3D';
 
-      if (window.__chart) {
-        window.__chart.destroy();
+      const trace = {
+        type: is3D ? 'scatter3d' : 'scatter',
+        mode: 'markers',
+        marker: { size: is3D ? 4 : 8, color: '#4dc9f6' },
+        name: dim + ' (' + coords.length + ' points)',
+        x: coords.map(c => c[0]),
+        y: coords.map(c => c[1]),
+      };
+
+      if (is3D) {
+        trace.z = coords.map(c => c[2]);
       }
 
-      window.__chart = new Chart(ctx, {
-        type: 'scatter',
-        data: {
-          datasets: [{
-            label: dim + ' (' + coords.length + ' points)',
-            data: dataPoints,
-            backgroundColor: '#4dc9f6',
-            pointRadius: 5,
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { labels: { color: fg } }
-          },
-          scales: {
-            x: {
-              ticks: { color: fg },
-              grid: { color: fg + '33' },
-              title: { display: true, text: 'X', color: fg }
-            },
-            y: {
-              ticks: { color: fg },
-              grid: { color: fg + '33' },
-              title: { display: true, text: 'Y', color: fg }
-            }
-          }
-        }
-      });
+      const layout = {
+        paper_bgcolor: bg,
+        plot_bgcolor: bg,
+        font: { color: fg },
+        margin: { l: 50, r: 20, t: 30, b: 50 },
+      };
+
+      if (!is3D) {
+        layout.xaxis = { title: 'X', gridcolor: fg + '33' };
+        layout.yaxis = { title: 'Y', gridcolor: fg + '33' };
+      } else {
+        layout.scene = {
+          xaxis: { title: 'X', gridcolor: fg + '33', color: fg },
+          yaxis: { title: 'Y', gridcolor: fg + '33', color: fg },
+          zaxis: { title: 'Z', gridcolor: fg + '33', color: fg },
+        };
+      }
+
+      Plotly.react('chart', [trace], layout, { responsive: true });
     }
 
     // Initial render with embedded data
