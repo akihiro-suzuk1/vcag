@@ -141,4 +141,34 @@ describe("getWebviewContent", () => {
     expect(html).toContain('let currentViewAs = "2D"');
     expect(html).toContain('const dataDim = "2D"');
   });
+
+  it("「線でつなぐ」チェックボックスが含まれる", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toContain('id="connect-lines"');
+  });
+
+  it("「始点と終点を結ぶ」チェックボックスが含まれる", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toContain('id="close-loop"');
+  });
+
+  it("「始点と終点を結ぶ」が初期状態で disabled", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toMatch(/id="close-loop"\s+disabled/);
+  });
 });

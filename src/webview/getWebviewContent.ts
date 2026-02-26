@@ -41,9 +41,14 @@ export function getWebviewContent(
       width: 100%;
       height: 90vh;
     }
+    #toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
     #toggle-dim {
       display: none;
-      margin-bottom: 8px;
       padding: 4px 12px;
       cursor: pointer;
       border: 1px solid var(--vscode-button-border, transparent);
@@ -56,10 +61,24 @@ export function getWebviewContent(
     #toggle-dim:hover {
       background: var(--vscode-button-hoverBackground);
     }
+    #toolbar label {
+      font-family: var(--vscode-font-family);
+      font-size: var(--vscode-font-size);
+      color: var(--vscode-editor-foreground);
+      cursor: pointer;
+      user-select: none;
+    }
+    #toolbar label input {
+      margin-right: 4px;
+    }
   </style>
 </head>
 <body>
-  <button id="toggle-dim">XY 2D で表示</button>
+  <div id="toolbar">
+    <button id="toggle-dim">XY 2D で表示</button>
+    <label><input type="checkbox" id="connect-lines" /> 線でつなぐ</label>
+    <label><input type="checkbox" id="close-loop" disabled /> 始点と終点を結ぶ</label>
+  </div>
   <div id="chart"></div>
   <script nonce="${nonce}" src="${plotlyUri}"></script>
   <script nonce="${nonce}">
@@ -68,6 +87,11 @@ export function getWebviewContent(
     let currentViewAs = "${dim}";
     const dataDim = "${dim}";
     const toggleBtn = document.getElementById('toggle-dim');
+    const connectLinesCb = document.getElementById('connect-lines');
+    const closeLoopCb = document.getElementById('close-loop');
+
+    let connectLines = false;
+    let closeLoop = false;
 
     if (dataDim === '3D') {
       toggleBtn.style.display = 'inline-block';
@@ -79,6 +103,23 @@ export function getWebviewContent(
       render(${data}, currentViewAs);
     });
 
+    connectLinesCb.addEventListener('change', () => {
+      connectLines = connectLinesCb.checked;
+      if (!connectLines) {
+        closeLoop = false;
+        closeLoopCb.checked = false;
+        closeLoopCb.disabled = true;
+      } else {
+        closeLoopCb.disabled = false;
+      }
+      render(${data}, currentViewAs);
+    });
+
+    closeLoopCb.addEventListener('change', () => {
+      closeLoop = closeLoopCb.checked;
+      render(${data}, currentViewAs);
+    });
+
     function render(coords, viewAs) {
       const fg = getComputedStyle(document.body)
         .getPropertyValue('--vscode-editor-foreground').trim() || '#cccccc';
@@ -87,34 +128,45 @@ export function getWebviewContent(
 
       const is3D = viewAs === '3D';
 
+      let drawCoords = coords;
+      if (connectLines && closeLoop && coords.length > 0) {
+        drawCoords = coords.concat([coords[0]]);
+      }
+
       const trace = {
         type: is3D ? 'scatter3d' : 'scatter',
-        mode: 'markers',
+        mode: connectLines ? 'lines+markers' : 'markers',
         marker: { size: is3D ? 4 : 8, color: '#4dc9f6' },
         name: viewAs + ' (' + coords.length + ' points)',
-        x: coords.map(c => c[0]),
-        y: coords.map(c => c[1]),
+        x: drawCoords.map(c => c[0]),
+        y: drawCoords.map(c => c[1]),
       };
 
-      if (is3D) {
-        trace.z = coords.map(c => c[2]);
+      if (connectLines) {
+        trace.line = { width: 1, color: '#4dc9f6' };
       }
+
+      if (is3D) {
+        trace.z = drawCoords.map(c => c[2]);
+      }
+
+      const axisColor = fg + '80';
 
       const layout = {
         paper_bgcolor: bg,
         plot_bgcolor: bg,
-        font: { color: fg },
+        font: { color: axisColor },
         margin: { l: 50, r: 20, t: 30, b: 50 },
       };
 
       if (!is3D) {
-        layout.xaxis = { title: 'X', gridcolor: fg + '33' };
-        layout.yaxis = { title: 'Y', gridcolor: fg + '33' };
+        layout.xaxis = { title: 'X', gridcolor: fg + '1a', color: axisColor };
+        layout.yaxis = { title: 'Y', gridcolor: fg + '1a', color: axisColor };
       } else {
         layout.scene = {
-          xaxis: { title: 'X', gridcolor: fg + '33', color: fg },
-          yaxis: { title: 'Y', gridcolor: fg + '33', color: fg },
-          zaxis: { title: 'Z', gridcolor: fg + '33', color: fg },
+          xaxis: { title: 'X', gridcolor: fg + '1a', color: axisColor },
+          yaxis: { title: 'Y', gridcolor: fg + '1a', color: axisColor },
+          zaxis: { title: 'Z', gridcolor: fg + '1a', color: axisColor },
         };
       }
 
