@@ -68,4 +68,44 @@ describe("extractCoordinates", () => {
       [3, 4],
     ]);
   });
+
+  it("指数表記を含む座標を抽出する", () => {
+    expect(extractCoordinates("1.5e2,3.0E-1 -2e+3,4.2e10")).toEqual([
+      [1.5e2, 3.0e-1],
+      [-2e+3, 4.2e10],
+    ]);
+  });
+
+  it("指数表記の3D座標を抽出する", () => {
+    expect(extractCoordinates("1e2,2e3,3e4")).toEqual([
+      [1e2, 2e3, 3e4],
+    ]);
+  });
+
+  it("ラベル付き座標 (x:, y:) を抽出する", () => {
+    const text = `
+let sp1 = coord! {x:0.0, y:10000.0}.to_point3(0.0);
+let sp2 = coord! {x:8348.643998, y:10000.0}.to_point3(0.0);
+let sp3 = coord! {x:8348.643998, y:25000.0}.to_point3(0.0);
+    `;
+    expect(extractCoordinates(text)).toEqual([
+      [0.0, 10000.0],
+      [8348.643998, 10000.0],
+      [8348.643998, 25000.0],
+    ]);
+  });
+
+  it("ラベル付き3D座標 (x:, y:, z:) を抽出する", () => {
+    expect(extractCoordinates("x: 1.0, y: 2.0, z: 3.0")).toEqual([
+      [1.0, 2.0, 3.0],
+    ]);
+  });
+
+  it("ラベル付きとカンマ直結が混在するテキスト", () => {
+    const text = "x:1.0, y:2.0 and 3,4";
+    expect(extractCoordinates(text)).toEqual([
+      [1.0, 2.0],
+      [3, 4],
+    ]);
+  });
 });
