@@ -41,27 +41,57 @@ export function getWebviewContent(
       width: 100%;
       height: 90vh;
     }
+    #toggle-dim {
+      display: none;
+      margin-bottom: 8px;
+      padding: 4px 12px;
+      cursor: pointer;
+      border: 1px solid var(--vscode-button-border, transparent);
+      border-radius: 2px;
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+      font-family: var(--vscode-font-family);
+      font-size: var(--vscode-font-size);
+    }
+    #toggle-dim:hover {
+      background: var(--vscode-button-hoverBackground);
+    }
   </style>
 </head>
 <body>
+  <button id="toggle-dim">XY 2D で表示</button>
   <div id="chart"></div>
   <script nonce="${nonce}" src="${plotlyUri}"></script>
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
 
-    function render(coords, dim) {
+    let currentViewAs = "${dim}";
+    const dataDim = "${dim}";
+    const toggleBtn = document.getElementById('toggle-dim');
+
+    if (dataDim === '3D') {
+      toggleBtn.style.display = 'inline-block';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      currentViewAs = currentViewAs === '3D' ? '2D' : '3D';
+      toggleBtn.textContent = currentViewAs === '3D' ? 'XY 2D で表示' : '3D で表示';
+      render(${data}, currentViewAs);
+    });
+
+    function render(coords, viewAs) {
       const fg = getComputedStyle(document.body)
         .getPropertyValue('--vscode-editor-foreground').trim() || '#cccccc';
       const bg = getComputedStyle(document.body)
         .getPropertyValue('--vscode-editor-background').trim() || '#1e1e1e';
 
-      const is3D = dim === '3D';
+      const is3D = viewAs === '3D';
 
       const trace = {
         type: is3D ? 'scatter3d' : 'scatter',
         mode: 'markers',
         marker: { size: is3D ? 4 : 8, color: '#4dc9f6' },
-        name: dim + ' (' + coords.length + ' points)',
+        name: viewAs + ' (' + coords.length + ' points)',
         x: coords.map(c => c[0]),
         y: coords.map(c => c[1]),
       };
@@ -92,12 +122,15 @@ export function getWebviewContent(
     }
 
     // Initial render with embedded data
-    render(${data}, "${dim}");
+    render(${data}, currentViewAs);
 
     // Listen for update messages
     window.addEventListener('message', (event) => {
       const msg = event.data;
       if (msg.type === 'render') {
+        currentViewAs = msg.dim;
+        toggleBtn.textContent = currentViewAs === '3D' ? 'XY 2D で表示' : '3D で表示';
+        toggleBtn.style.display = msg.dim === '3D' ? 'inline-block' : 'none';
         render(msg.coords, msg.dim);
       }
     });

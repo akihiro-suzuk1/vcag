@@ -99,8 +99,8 @@ describe("getWebviewContent", () => {
       [[1, 2]],
       "2D"
     );
-    // Initial render call uses "2D"
-    expect(html).toMatch(/render\(\[\[1,2\]\],\s*"2D"\)/);
+    // Initial render call uses currentViewAs variable
+    expect(html).toMatch(/render\(\[\[1,2\]\],\s*currentViewAs\)/);
   });
 
   it("3D では scatter3d タイプが使用される", () => {
@@ -113,6 +113,32 @@ describe("getWebviewContent", () => {
     // render function contains scatter3d logic
     expect(html).toContain("scatter3d");
     // Initial render call uses "3D"
-    expect(html).toMatch(/render\(\[\[1,2,3\]\],\s*"3D"\)/);
+    expect(html).toMatch(/render\(\[\[1,2,3\]\],\s*currentViewAs\)/);
+  });
+
+  it("3D 時にトグルボタンが含まれる", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2, 3]],
+      "3D"
+    );
+    expect(html).toContain('id="toggle-dim"');
+    expect(html).toContain("XY 2D で表示");
+    // dataDim === '3D' なのでボタンが表示される
+    expect(html).toContain("dataDim === '3D'");
+  });
+
+  it("2D 時にトグルボタンが非表示", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    // ボタン要素自体は存在するが dataDim が '2D' なので display: none のまま
+    expect(html).toContain('id="toggle-dim"');
+    expect(html).toContain('let currentViewAs = "2D"');
+    expect(html).toContain('const dataDim = "2D"');
   });
 });
