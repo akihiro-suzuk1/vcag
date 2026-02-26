@@ -162,13 +162,33 @@ describe("getWebviewContent", () => {
     expect(html).toContain('id="close-loop"');
   });
 
-  it("「始点と終点を結ぶ」が初期状態で disabled", () => {
+  it("Connect lines が初期状態で checked", () => {
     const html = getWebviewContent(
       createMockWebview(),
       extensionUri,
       [[1, 2]],
       "2D"
     );
-    expect(html).toMatch(/id="close-loop"\s+disabled/);
+    expect(html).toMatch(/id="connect-lines"\s+checked/);
+  });
+
+  it("Close loop が初期状態で disabled でない", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).not.toMatch(/id="close-loop"\s+disabled/);
+  });
+
+  it("Flip Y チェックボックスが含まれる", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toContain('id="flip-y"');
   });
 });

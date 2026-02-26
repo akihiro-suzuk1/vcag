@@ -76,8 +76,9 @@ export function getWebviewContent(
 <body>
   <div id="toolbar">
     <button id="toggle-dim">Show as XY 2D</button>
-    <label><input type="checkbox" id="connect-lines" /> Connect lines</label>
-    <label><input type="checkbox" id="close-loop" disabled /> Close loop</label>
+    <label><input type="checkbox" id="connect-lines" checked /> Connect lines</label>
+    <label><input type="checkbox" id="close-loop" /> Close loop</label>
+    <label><input type="checkbox" id="flip-y" /> Flip Y</label>
   </div>
   <div id="chart"></div>
   <script nonce="${nonce}" src="${plotlyUri}"></script>
@@ -89,9 +90,11 @@ export function getWebviewContent(
     const toggleBtn = document.getElementById('toggle-dim');
     const connectLinesCb = document.getElementById('connect-lines');
     const closeLoopCb = document.getElementById('close-loop');
+    const flipYCb = document.getElementById('flip-y');
 
-    let connectLines = false;
+    let connectLines = true;
     let closeLoop = false;
+    let flipY = false;
 
     if (dataDim === '3D') {
       toggleBtn.style.display = 'inline-block';
@@ -117,6 +120,11 @@ export function getWebviewContent(
 
     closeLoopCb.addEventListener('change', () => {
       closeLoop = closeLoopCb.checked;
+      render(${data}, currentViewAs);
+    });
+
+    flipYCb.addEventListener('change', () => {
+      flipY = flipYCb.checked;
       render(${data}, currentViewAs);
     });
 
@@ -161,11 +169,11 @@ export function getWebviewContent(
 
       if (!is3D) {
         layout.xaxis = { title: 'X', gridcolor: fg + '1a', color: axisColor };
-        layout.yaxis = { title: 'Y', gridcolor: fg + '1a', color: axisColor };
+        layout.yaxis = { title: 'Y', gridcolor: fg + '1a', color: axisColor, autorange: flipY ? 'reversed' : true };
       } else {
         layout.scene = {
           xaxis: { title: 'X', gridcolor: fg + '1a', color: axisColor },
-          yaxis: { title: 'Y', gridcolor: fg + '1a', color: axisColor },
+          yaxis: { title: 'Y', gridcolor: fg + '1a', color: axisColor, autorange: flipY ? 'reversed' : true },
           zaxis: { title: 'Z', gridcolor: fg + '1a', color: axisColor },
         };
       }
