@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
 import { extractCoordinates } from "./extractCoordinates";
+import { getWebviewContent } from "./webview/getWebviewContent";
+
+let panel: vscode.WebviewPanel | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
   const disposable = vscode.commands.registerCommand(
@@ -25,15 +28,33 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       const dim = coords[0].length === 3 ? "3D" : "2D";
-      const preview = coords
-        .slice(0, 5)
-        .map((c) => `(${c.join(", ")})`)
-        .join("  ");
-      const suffix = coords.length > 5 ? ` ... 他${coords.length - 5}点` : "";
 
-      vscode.window.showInformationMessage(
-        `${dim} 座標 ${coords.length}点: ${preview}${suffix}`
+      if (panel) {
+        panel.reveal(vscode.ViewColumn.Beside);
+      } else {
+        panel = vscode.window.createWebviewPanel(
+          "coordGraph",
+          "Coord Graph",
+          vscode.ViewColumn.Beside,
+          {
+            enableScripts: true,
+            localResourceRoots: [
+              vscode.Uri.joinPath(context.extensionUri, "node_modules"),
+            ],
+          }
+        );
+        panel.onDidDispose(() => {
+          panel = undefined;
+        });
+      }
+
+      panel.webview.html = getWebviewContent(
+        panel.webview,
+        context.extensionUri,
+        coords,
+        dim
       );
+      panel.webview.postMessage({ type: "render", coords, dim });
     }
   );
 

@@ -3,6 +3,7 @@
 src/**
 out/**
 node_modules/**
+!node_modules/chart.js/dist/chart.umd.js
 esbuild.js
 tsconfig.json
 **/*.ts
