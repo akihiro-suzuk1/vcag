@@ -1,6 +1,9 @@
 .vscode/**
 .vscode-test/**
+.claude/**
 src/**
+spec/**
+testdata/**
 out/**
 node_modules/**
 !node_modules/plotly.js-dist-min/plotly.min.js
@@ -9,3 +12,4 @@ tsconfig.json
 **/*.ts
 **/*.map
 .gitignore
+*.vsix
