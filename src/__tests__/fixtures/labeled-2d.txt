@@ -1,0 +1,4 @@
+
+let sp1 = coord! {x:0.0, y:10000.0}.to_point3(0.0);
+let sp2 = coord! {x:8348.643998, y:10000.0}.to_point3(0.0);
+let sp3 = coord! {x:8348.643998, y:25000.0}.to_point3(0.0);

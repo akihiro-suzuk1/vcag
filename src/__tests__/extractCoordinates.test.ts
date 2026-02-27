@@ -1,5 +1,11 @@
+import { readFileSync } from "fs";
+import { join } from "path";
 import { describe, it, expect } from "vitest";
 import { extractCoordinates } from "../extractCoordinates";
+
+function readFixture(name: string): string {
+  return readFileSync(join(__dirname, "fixtures", name), "utf-8");
+}
 
 describe("extractCoordinates", () => {
   it("空文字列から空配列を返す", () => {
@@ -83,12 +89,7 @@ describe("extractCoordinates", () => {
   });
 
   it("ラベル付き座標 (x:, y:) を抽出する", () => {
-    const text = `
-let sp1 = coord! {x:0.0, y:10000.0}.to_point3(0.0);
-let sp2 = coord! {x:8348.643998, y:10000.0}.to_point3(0.0);
-let sp3 = coord! {x:8348.643998, y:25000.0}.to_point3(0.0);
-    `;
-    expect(extractCoordinates(text)).toEqual([
+    expect(extractCoordinates(readFixture("labeled-2d.txt"))).toEqual([
       [0.0, 10000.0],
       [8348.643998, 10000.0],
       [8348.643998, 25000.0],
@@ -96,26 +97,20 @@ let sp3 = coord! {x:8348.643998, y:25000.0}.to_point3(0.0);
   });
 
   it("ラベル付き3D座標 (x:, y:, z:) を抽出する", () => {
-    expect(extractCoordinates("x: 1.0, y: 2.0, z: 3.0")).toEqual([
+    expect(extractCoordinates(readFixture("labeled-3d.txt"))).toEqual([
       [1.0, 2.0, 3.0],
     ]);
   });
 
   it("ラベル付きとカンマ直結が混在するテキスト", () => {
-    const text = "x:1.0, y:2.0 and 3,4";
-    expect(extractCoordinates(text)).toEqual([
+    expect(extractCoordinates(readFixture("labeled-and-tight.txt"))).toEqual([
       [1.0, 2.0],
       [3, 4],
     ]);
   });
 
   it("JSON 配列形式の3D座標を抽出する", () => {
-    const text = `"boundaryPoints": [
-    [-12521.9684942491, -12521.968494585002, 0],
-    [12521.9684942491, -12521.968494585002, 0],
-    [-9279.29023849407, 12521.968494585002, 0]
-]`;
-    expect(extractCoordinates(text)).toEqual([
+    expect(extractCoordinates(readFixture("json-array-3d.txt"))).toEqual([
       [-12521.9684942491, -12521.968494585002, 0],
       [12521.9684942491, -12521.968494585002, 0],
       [-9279.29023849407, 12521.968494585002, 0],
@@ -123,13 +118,7 @@ let sp3 = coord! {x:8348.643998, y:25000.0}.to_point3(0.0);
   });
 
   it("Point3::new() 形式の座標を抽出する", () => {
-    const text = `
-            Point3::new(8.0, 8.0, 0.0),
-            Point3::new(12.0, 8.0, 0.0),
-            Point3::new(12.0, 12.0, 0.0),
-            Point3::new(8.0, 12.0, 0.0),
-    `;
-    expect(extractCoordinates(text)).toEqual([
+    expect(extractCoordinates(readFixture("point3-new.txt"))).toEqual([
       [8.0, 8.0, 0.0],
       [12.0, 8.0, 0.0],
       [12.0, 12.0, 0.0],
@@ -151,22 +140,20 @@ let sp3 = coord! {x:8348.643998, y:25000.0}.to_point3(0.0);
   });
 
   it("波括弧内の座標を抽出する (C/C++ 初期化リスト)", () => {
-    const text = "{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}";
-    expect(extractCoordinates(text)).toEqual([
+    expect(extractCoordinates(readFixture("braces.txt"))).toEqual([
       [1.0, 2.0, 3.0],
       [4.0, 5.0, 6.0],
     ]);
   });
 
   it("セミコロン区切りの座標を抽出する", () => {
-    expect(extractCoordinates("1.0; 2.0; 3.0")).toEqual([
+    expect(extractCoordinates(readFixture("semicolon.txt"))).toEqual([
       [1.0, 2.0, 3.0],
     ]);
   });
 
   it("スペース区切りの3D座標を抽出する (点群/OBJ形式)", () => {
-    const text = "v 1.0 2.0 3.0\nv 4.0 5.0 6.0\nv 7.0 8.0 9.0";
-    expect(extractCoordinates(text)).toEqual([
+    expect(extractCoordinates(readFixture("obj-format.txt"))).toEqual([
       [1.0, 2.0, 3.0],
       [4.0, 5.0, 6.0],
       [7.0, 8.0, 9.0],
@@ -174,15 +161,14 @@ let sp3 = coord! {x:8348.643998, y:25000.0}.to_point3(0.0);
   });
 
   it("タブ区切りの2D座標を抽出する (TSV形式)", () => {
-    const text = "1.0\t2.0\n3.0\t4.0";
-    expect(extractCoordinates(text)).toEqual([
+    expect(extractCoordinates(readFixture("tsv-2d.txt"))).toEqual([
       [1.0, 2.0],
       [3.0, 4.0],
     ]);
   });
 
   it("JSON 配列形式の2D座標を抽出する", () => {
-    expect(extractCoordinates("[[1, 2], [3, 4]]")).toEqual([
+    expect(extractCoordinates(readFixture("json-array-2d.txt"))).toEqual([
       [1, 2],
       [3, 4],
     ]);
