@@ -173,4 +173,57 @@ describe("extractCoordinates", () => {
       [3, 4],
     ]);
   });
+
+  it("Revit プロパティ形式 (X = val, Y = val, Z = val) を抽出する", () => {
+    expect(extractCoordinates(readFixture("revit-properties.txt"))).toEqual([
+      [12500.0, 8300.0, 3000.0],
+      [0.0, 0.0, 0.0],
+      [25000.0, 15000.0, 3000.0],
+    ]);
+  });
+
+  it("AutoCAD LIST 形式 (X= val Y= val Z= val) を抽出する", () => {
+    expect(extractCoordinates(readFixture("autocad-list.txt"))).toEqual([
+      [12500.0, 8300.0, 0.0],
+    ]);
+  });
+
+  it("Dynamo Watch 形式 (Point(X = val, Y = val, Z = val)) を抽出する", () => {
+    expect(extractCoordinates(readFixture("dynamo-watch.txt"))).toEqual([
+      [0.0, 0.0, 0.0],
+      [25000.0, 0.0, 0.0],
+      [25000.0, 15000.0, 0.0],
+    ]);
+  });
+
+  it("大文字ラベル+コロン (X: val Y: val) を抽出する", () => {
+    expect(extractCoordinates(readFixture("archicad-tracker.txt"))).toEqual([
+      [12500.0, 8300.0],
+    ]);
+  });
+
+  it("カンマ+スペース区切り (ArchiCAD GDL 等) を抽出する", () => {
+    expect(extractCoordinates(readFixture("archicad-gdl.txt"))).toEqual([
+      [12500, 8300, 0],
+      [13000, 8500, 0],
+    ]);
+  });
+
+  it("カンマ+スペース区切り 2D を抽出する", () => {
+    expect(extractCoordinates("100, 200")).toEqual([[100, 200]]);
+  });
+
+  it("SketchUp mm 単位付き座標を抽出する", () => {
+    expect(extractCoordinates(readFixture("sketchup-mm.txt"))).toEqual([
+      [12500.0, 8300.0, 0.0],
+      [0.0, 0.0, 3000.0],
+    ]);
+  });
+
+  it("単位付き座標 (cm, m, in, ft) を抽出する", () => {
+    expect(extractCoordinates("(100.0cm, 200.0cm)")).toEqual([[100.0, 200.0]]);
+    expect(extractCoordinates("(1.0m, 2.0m, 3.0m)")).toEqual([[1.0, 2.0, 3.0]]);
+    expect(extractCoordinates("(12.0in, 24.0in)")).toEqual([[12.0, 24.0]]);
+    expect(extractCoordinates("(3.0ft, 6.0ft)")).toEqual([[3.0, 6.0]]);
+  });
 });
