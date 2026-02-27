@@ -131,12 +131,13 @@ export function extractCoordinates(text: string): number[][] {
     consumedRanges.push([start, end]);
   }
 
-  // パターン6b: カンマ+スペース区切り (100, 200 / 100, 200, 300 — ArchiCAD GDL 等)
-  const spacedCommaPattern = new RegExp(
-    `(${num}),\\s+(${num})(?:,\\s+(${num}))?`,
+  // パターン7: スペース/タブ区切り (1.0 2.0 3.0 点群・OBJ・PLY・WKT 等)
+  // カンマ+スペースより先に実行し、WKT の "0 0, 10 0" 等で座標境界をまたぐ誤マッチを防ぐ
+  const spacePattern = new RegExp(
+    `(${num})[ \\t]+(${num})(?:[ \\t]+(${num}))?`,
     "g"
   );
-  while ((m = spacedCommaPattern.exec(text)) !== null) {
+  while ((m = spacePattern.exec(text)) !== null) {
     const start = m.index;
     const end = start + m[0].length;
     const overlaps = consumedRanges.some(([s, e]) => start < e && end > s);
@@ -151,12 +152,12 @@ export function extractCoordinates(text: string): number[][] {
     consumedRanges.push([start, end]);
   }
 
-  // パターン7: スペース/タブ区切り (1.0 2.0 3.0 点群・OBJ・PLY 等)
-  const spacePattern = new RegExp(
-    `(${num})[ \\t]+(${num})(?:[ \\t]+(${num}))?`,
+  // パターン8: カンマ+スペース区切り (100, 200 / 100, 200, 300 — ArchiCAD GDL 等)
+  const spacedCommaPattern = new RegExp(
+    `(${num}),\\s+(${num})(?:,\\s+(${num}))?`,
     "g"
   );
-  while ((m = spacePattern.exec(text)) !== null) {
+  while ((m = spacedCommaPattern.exec(text)) !== null) {
     const start = m.index;
     const end = start + m[0].length;
     const overlaps = consumedRanges.some(([s, e]) => start < e && end > s);

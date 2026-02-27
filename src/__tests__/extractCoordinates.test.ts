@@ -226,4 +226,46 @@ describe("extractCoordinates", () => {
     expect(extractCoordinates("(12.0in, 24.0in)")).toEqual([[12.0, 24.0]]);
     expect(extractCoordinates("(3.0ft, 6.0ft)")).toEqual([[3.0, 6.0]]);
   });
+
+  it("WKT POINT 形式の2D座標を抽出する", () => {
+    expect(extractCoordinates(readFixture("wkt-point.txt"))).toEqual([
+      [139.6917, 35.6895],
+      [139.7454, 35.7295],
+    ]);
+  });
+
+  it("WKT POINT Z 形式の3D座標を抽出する", () => {
+    expect(extractCoordinates(readFixture("wkt-point-z.txt"))).toEqual([
+      [139.6917, 35.6895, 45.0],
+      [139.7454, 35.7295, 30.0],
+    ]);
+  });
+
+  it("WKT LINESTRING 形式の座標を抽出する", () => {
+    expect(extractCoordinates(readFixture("wkt-linestring.txt"))).toEqual([
+      [0, 0],
+      [10, 0],
+      [10, 10],
+      [0, 10],
+      [0, 0],
+    ]);
+  });
+
+  it("WKT POLYGON 形式の座標を抽出する", () => {
+    expect(extractCoordinates(readFixture("wkt-polygon.txt"))).toEqual([
+      [0, 0],
+      [100, 0],
+      [100, 50],
+      [0, 50],
+      [0, 0],
+    ]);
+  });
+
+  it("WKT MULTIPOINT 形式の座標を抽出する", () => {
+    expect(extractCoordinates(readFixture("wkt-multipoint.txt"))).toEqual([
+      [0, 0],
+      [10, 20],
+      [30, 40],
+    ]);
+  });
 });
