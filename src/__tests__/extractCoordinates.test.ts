@@ -122,6 +122,34 @@ let sp3 = coord! {x:8348.643998, y:25000.0}.to_point3(0.0);
     ]);
   });
 
+  it("Point3::new() 形式の座標を抽出する", () => {
+    const text = `
+            Point3::new(8.0, 8.0, 0.0),
+            Point3::new(12.0, 8.0, 0.0),
+            Point3::new(12.0, 12.0, 0.0),
+            Point3::new(8.0, 12.0, 0.0),
+    `;
+    expect(extractCoordinates(text)).toEqual([
+      [8.0, 8.0, 0.0],
+      [12.0, 8.0, 0.0],
+      [12.0, 12.0, 0.0],
+      [8.0, 12.0, 0.0],
+    ]);
+  });
+
+  it("括弧内の2D座標を抽出する", () => {
+    expect(extractCoordinates("(1.5, 2.3) (3.0, 4.0)")).toEqual([
+      [1.5, 2.3],
+      [3.0, 4.0],
+    ]);
+  });
+
+  it("括弧内にスペースが複数あっても抽出する", () => {
+    expect(extractCoordinates("(  8.0 ,  8.0 ,  0.0  )")).toEqual([
+      [8.0, 8.0, 0.0],
+    ]);
+  });
+
   it("JSON 配列形式の2D座標を抽出する", () => {
     expect(extractCoordinates("[[1, 2], [3, 4]]")).toEqual([
       [1, 2],

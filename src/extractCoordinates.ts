@@ -49,7 +49,27 @@ export function extractCoordinates(text: string): number[][] {
     consumedRanges.push([start, end]);
   }
 
-  // パターン3: カンマ直結 (1,2 / 1,2,3)
+  // パターン3: 括弧内カンマ区切り (Point3::new(1.0, 2.0, 3.0) / (1,2) など)
+  const parenPattern = new RegExp(
+    `\\(\\s*(${num})\\s*,\\s*(${num})(?:\\s*,\\s*(${num}))?\\s*\\)`,
+    "g"
+  );
+  while ((m = parenPattern.exec(text)) !== null) {
+    const start = m.index;
+    const end = start + m[0].length;
+    const overlaps = consumedRanges.some(([s, e]) => start < e && end > s);
+    if (overlaps) {
+      continue;
+    }
+    const coord = [Number(m[1]), Number(m[2])];
+    if (m[3] !== undefined) {
+      coord.push(Number(m[3]));
+    }
+    matches.push({ index: start, coords: coord });
+    consumedRanges.push([start, end]);
+  }
+
+  // パターン4: カンマ直結 (1,2 / 1,2,3)
   const tightPattern = new RegExp(`${num},${num}(?:,${num})?`, "g");
   while ((m = tightPattern.exec(text)) !== null) {
     const start = m.index;
