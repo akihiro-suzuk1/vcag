@@ -150,6 +150,37 @@ let sp3 = coord! {x:8348.643998, y:25000.0}.to_point3(0.0);
     ]);
   });
 
+  it("波括弧内の座標を抽出する (C/C++ 初期化リスト)", () => {
+    const text = "{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}";
+    expect(extractCoordinates(text)).toEqual([
+      [1.0, 2.0, 3.0],
+      [4.0, 5.0, 6.0],
+    ]);
+  });
+
+  it("セミコロン区切りの座標を抽出する", () => {
+    expect(extractCoordinates("1.0; 2.0; 3.0")).toEqual([
+      [1.0, 2.0, 3.0],
+    ]);
+  });
+
+  it("スペース区切りの3D座標を抽出する (点群/OBJ形式)", () => {
+    const text = "v 1.0 2.0 3.0\nv 4.0 5.0 6.0\nv 7.0 8.0 9.0";
+    expect(extractCoordinates(text)).toEqual([
+      [1.0, 2.0, 3.0],
+      [4.0, 5.0, 6.0],
+      [7.0, 8.0, 9.0],
+    ]);
+  });
+
+  it("タブ区切りの2D座標を抽出する (TSV形式)", () => {
+    const text = "1.0\t2.0\n3.0\t4.0";
+    expect(extractCoordinates(text)).toEqual([
+      [1.0, 2.0],
+      [3.0, 4.0],
+    ]);
+  });
+
   it("JSON 配列形式の2D座標を抽出する", () => {
     expect(extractCoordinates("[[1, 2], [3, 4]]")).toEqual([
       [1, 2],

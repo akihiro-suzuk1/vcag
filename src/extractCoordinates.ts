@@ -69,7 +69,47 @@ export function extractCoordinates(text: string): number[][] {
     consumedRanges.push([start, end]);
   }
 
-  // パターン4: カンマ直結 (1,2 / 1,2,3)
+  // パターン4: 波括弧内カンマ区切り ({1.0, 2.0, 3.0} C/C++ 初期化リストなど)
+  const bracePattern = new RegExp(
+    `\\{\\s*(${num})\\s*,\\s*(${num})(?:\\s*,\\s*(${num}))?\\s*\\}`,
+    "g"
+  );
+  while ((m = bracePattern.exec(text)) !== null) {
+    const start = m.index;
+    const end = start + m[0].length;
+    const overlaps = consumedRanges.some(([s, e]) => start < e && end > s);
+    if (overlaps) {
+      continue;
+    }
+    const coord = [Number(m[1]), Number(m[2])];
+    if (m[3] !== undefined) {
+      coord.push(Number(m[3]));
+    }
+    matches.push({ index: start, coords: coord });
+    consumedRanges.push([start, end]);
+  }
+
+  // パターン5: セミコロン区切り (1.0; 2.0; 3.0 MATLAB 等)
+  const semiPattern = new RegExp(
+    `(${num})\\s*;\\s*(${num})(?:\\s*;\\s*(${num}))?`,
+    "g"
+  );
+  while ((m = semiPattern.exec(text)) !== null) {
+    const start = m.index;
+    const end = start + m[0].length;
+    const overlaps = consumedRanges.some(([s, e]) => start < e && end > s);
+    if (overlaps) {
+      continue;
+    }
+    const coord = [Number(m[1]), Number(m[2])];
+    if (m[3] !== undefined) {
+      coord.push(Number(m[3]));
+    }
+    matches.push({ index: start, coords: coord });
+    consumedRanges.push([start, end]);
+  }
+
+  // パターン6: カンマ直結 (1,2 / 1,2,3)
   const tightPattern = new RegExp(`${num},${num}(?:,${num})?`, "g");
   while ((m = tightPattern.exec(text)) !== null) {
     const start = m.index;
@@ -79,6 +119,27 @@ export function extractCoordinates(text: string): number[][] {
       continue;
     }
     matches.push({ index: start, coords: m[0].split(",").map(Number) });
+    consumedRanges.push([start, end]);
+  }
+
+  // パターン7: スペース/タブ区切り (1.0 2.0 3.0 点群・OBJ・PLY 等)
+  const spacePattern = new RegExp(
+    `(${num})[ \\t]+(${num})(?:[ \\t]+(${num}))?`,
+    "g"
+  );
+  while ((m = spacePattern.exec(text)) !== null) {
+    const start = m.index;
+    const end = start + m[0].length;
+    const overlaps = consumedRanges.some(([s, e]) => start < e && end > s);
+    if (overlaps) {
+      continue;
+    }
+    const coord = [Number(m[1]), Number(m[2])];
+    if (m[3] !== undefined) {
+      coord.push(Number(m[3]));
+    }
+    matches.push({ index: start, coords: coord });
+    consumedRanges.push([start, end]);
   }
 
   // テキスト中の出現順にソート
