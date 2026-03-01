@@ -3,6 +3,11 @@
   "displayName": "VCAG",
   "description": "A VS Code extension powered by AI",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/akihiro-suzuk1/vcag.git"
+  },
+  "icon": "images/icon.png",
   "license": "MIT",
   "publisher": "a-suzuki",
   "engines": {
