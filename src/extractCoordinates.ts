@@ -112,6 +112,32 @@ export function extractCoordinates(text: string): number[][] {
     consumedRanges.push([start, end]);
   }
 
+  // パターン5b: WKT リング形式 (x1 y1,x2 y2,... — カンマ区切り・スペース区切りペア)
+  // tight comma パターンより先に実行して "10000.0,25000.0" 等の誤マッチを防ぐ
+  const wktRingPattern = new RegExp(
+    `(?<![,\\d])${num}[ \\t]+${num}(?:[ \\t]+${num})?(?:,${num}[ \\t]+${num}(?:[ \\t]+${num})?)+`,
+    "g"
+  );
+  while ((m = wktRingPattern.exec(text)) !== null) {
+    const start = m.index;
+    const end = start + m[0].length;
+    const overlaps = consumedRanges.some(([s, e]) => start < e && end > s);
+    if (overlaps) {
+      continue;
+    }
+    m[0].split(",").forEach((pair) => {
+      const parts = pair.trim().split(/[ \t]+/);
+      if (parts.length >= 2) {
+        const coord = [Number(parts[0]), Number(parts[1])];
+        if (parts.length >= 3) {
+          coord.push(Number(parts[2]));
+        }
+        matches.push({ index: start, coords: coord });
+      }
+    });
+    consumedRanges.push([start, end]);
+  }
+
   // パターン6: カンマ直結 (1,2 / 1,2,3 — スペースなし)
   const tightPattern = new RegExp(
     `(${num}),(${num})(?:,(${num}))?`,

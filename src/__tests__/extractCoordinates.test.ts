@@ -276,4 +276,14 @@ describe("extractCoordinates", () => {
       [30, 40],
     ]);
   });
+
+  it("WKT POLYGON compact 形式（カンマ後スペースなし）の座標を抽出する", () => {
+    expect(extractCoordinates(readFixture("wkt-polygon-compact.txt"))).toEqual([
+      [0.0, 10000.0],
+      [25000.0, 10000.0],
+      [25000.0, 35000.0],
+      [0.0, 35000.0],
+      [0.0, 10000.0],
+    ]);
+  });
 });
