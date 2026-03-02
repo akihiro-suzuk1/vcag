@@ -2,7 +2,7 @@
   "name": "vcag",
   "displayName": "VCAG",
   "description": "A VS Code extension powered by AI",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/akihiro-suzuk1/vcag.git"
