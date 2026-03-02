@@ -109,6 +109,14 @@ describe("extractCoordinates", () => {
     ]);
   });
 
+  it("任意のアルファベットラベル (lat, longitude, count 等) の座標を抽出する", () => {
+    expect(extractCoordinates(readFixture("labeled-arbitrary.txt"))).toEqual([
+      [35.68, 139.76],
+      [42, 100.5],
+      [1.0, 2.0, 3.0],
+    ]);
+  });
+
   it("JSON 配列形式の3D座標を抽出する", () => {
     expect(extractCoordinates(readFixture("json-array-3d.txt"))).toEqual([
       [-12521.9684942491, -12521.968494585002, 0],

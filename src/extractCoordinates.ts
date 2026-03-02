@@ -12,10 +12,11 @@ export function extractCoordinates(text: string): number[][] {
 
   const matches: { index: number; coords: number[] }[] = [];
 
-  // パターン1: ラベル付き座標 (x:1.0, y:2.0 / X = 1.0, Y = 2.0 等)
-  const label = /[xyzXYZ]\s*[:=]\s*/.source;
+  // パターン1: ラベル付き座標 (x:1.0, y:2.0 / lat: 35.68, longitude: 139.76 等)
+  const label = /[a-zA-Z]+\s*[:=]\s*/.source;
+  // 区切りはスペース・タブ・カンマのみ（改行で座標セットを分離）
   const labeledPattern = new RegExp(
-    `${label}(${num})[\\s,]+${label}(${num})(?:[\\s,]+${label}(${num}))?`,
+    `${label}(${num})[ \\t,]+${label}(${num})(?:[ \\t,]+${label}(${num}))?`,
     "g"
   );
 
