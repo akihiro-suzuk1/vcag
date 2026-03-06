@@ -1,7 +1,7 @@
 {
   "name": "vcag",
   "displayName": "VCAG",
-  "description": "A VS Code extension powered by AI",
+  "description": "Extract coordinate data from selected text or clipboard and visualize as interactive 2D/3D graph",
   "version": "0.3.2",
   "repository": {
     "type": "git",
