@@ -2,7 +2,7 @@
   "name": "vcag",
   "displayName": "VCAG",
   "description": "Extract coordinate data from selected text or clipboard and visualize as interactive 2D/3D graph",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/akihiro-suzuk1/vcag.git"
