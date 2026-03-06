@@ -1,6 +1,6 @@
 # VCAG — View Coordinates As Graph
 
-A VS Code extension that extracts coordinate data from selected text and visualizes it as an interactive 2D/3D graph using Plotly.js.
+A VS Code extension that extracts coordinate data from selected text and visualizes it as an interactive 2D/3D graph using Plotly.js, with optional map display via Leaflet.js + OpenStreetMap.
 
 This tool lets you quickly graph any coordinates from selected text in the editor or from the clipboard (e.g. terminal output, debug console, other application).
 
@@ -59,7 +59,9 @@ Both 2D and 3D coordinates are automatically detected.
 - **2D / 3D toggle** — Switch between XY 2D and 3D views for 3D data
 - **Connect lines** — Draw lines between points in order to trace the path
 - **Close loop** — Connect the last point back to the first to form a closed shape
+- **Swap XY** — Swap X and Y values (useful for lat/lng reordering)
 - **Flip Y** — Reverse Y-axis (useful for screen coordinates)
+- **Map mode** — Display coordinates on an OpenStreetMap tile layer using Leaflet.js (toggle with the Map checkbox)
 
 ## Installation
 
