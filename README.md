@@ -2,12 +2,22 @@
 
 A VS Code extension that extracts coordinate data from selected text and visualizes it as an interactive 2D/3D graph using Plotly.js.
 
-This tool aims to let you quickly graph any coordinates simply by selecting text in your source code.
+This tool lets you quickly graph any coordinates from selected text in the editor or from the clipboard (e.g. terminal output, debug console, other application).
 
 ## Usage
 
+### From selection (editor)
+
 1. Select text containing coordinate data in the editor
 2. Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`) and run **Coord Graph: Plot Coordinates from Selection**
+3. A graph appears in a Webview panel
+
+### From clipboard (terminal, debug console, etc.)
+
+The editor selection API is not available when focus is on the terminal or debug console. Use the clipboard instead:
+
+1. Select and copy (`Cmd+C` / `Ctrl+C`) the coordinate data (e.g. from terminal output, debug console, or any other view)
+2. Run **Coord Graph: Plot Coordinates from Clipboard** from the Command Palette
 3. A graph appears in a Webview panel
 
 ## Supported Formats
@@ -62,7 +72,7 @@ Both 2D and 3D coordinates are automatically detected.
 **From VSIX file**:
 
 ```bash
-code --install-extension vcag-0.1.0.vsix
+code --install-extension vcag-0.3.1.vsix
 ```
 
 Or in VS Code: Extensions view → `...` → **Install from VSIX...** and select the `.vsix` file.
