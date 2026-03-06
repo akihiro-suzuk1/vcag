@@ -1,7 +1,7 @@
 {
   "name": "vcag",
   "displayName": "VCAG - Coordinate Graph & Map Viewer",
-  "description": "Extract coordinate data from selected text or clipboard and visualize as interactive 2D/3D graph (Plotly) or map (Leaflet + OpenStreetMap)",
+  "description": "Just select messy text containing numbers — no formatting needed. Extracts coordinates and visualizes as 2D/3D graph (Plotly) or map (Leaflet + OpenStreetMap)",
   "version": "0.4.1",
   "repository": {
     "type": "git",

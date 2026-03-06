@@ -2,7 +2,7 @@
 
 A VS Code extension that extracts coordinate data from selected text and visualizes it as an interactive 2D/3D graph using Plotly.js, with optional map display via Leaflet.js + OpenStreetMap.
 
-This tool lets you quickly graph any coordinates from selected text in the editor or from the clipboard (e.g. terminal output, debug console, other application).
+**Just select any text containing numbers — no formatting needed.** Works with messy, mixed-format data: debug output, log files, code snippets, whatever. VCAG greedily picks up coordinates from 7+ format patterns so you don't have to clean up your data first.
 
 ## Usage
 
@@ -52,7 +52,7 @@ lat: 35.68, lng: 139.76
 1.5e2, 3.0e-1
 ```
 
-Both 2D and 3D coordinates are automatically detected.
+Both 2D and 3D coordinates are automatically detected. Formats can be mixed — VCAG picks up whatever it can find.
 
 ## Features
 
