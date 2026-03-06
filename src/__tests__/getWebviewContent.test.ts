@@ -15,6 +15,7 @@ function createMockWebview() {
     asWebviewUri: (uri: { toString: () => string }) => ({
       toString: () => `https://file+.vscode-resource.vscode-cdn.net/${uri.toString()}`,
     }),
+    cspSource: "https://file+.vscode-resource.vscode-cdn.net",
   } as unknown as import("vscode").Webview;
 }
 
@@ -46,7 +47,7 @@ describe("getWebviewContent", () => {
     expect(unique.size).toBe(1);
   });
 
-  it("CSP ヘッダが正しい（style-src 'unsafe-inline'）", () => {
+  it("CSP ヘッダが正しい", () => {
     const html = getWebviewContent(
       createMockWebview(),
       extensionUri,
@@ -56,6 +57,8 @@ describe("getWebviewContent", () => {
     expect(html).toContain("default-src 'none'");
     expect(html).toMatch(/script-src 'nonce-[0-9a-f]{32}'/);
     expect(html).toContain("style-src 'unsafe-inline'");
+    expect(html).toContain("img-src https://tile.openstreetmap.org");
+    expect(html).toContain("connect-src https://tile.openstreetmap.org");
   });
 
   it("座標データが埋め込まれる", () => {
@@ -190,5 +193,77 @@ describe("getWebviewContent", () => {
       "2D"
     );
     expect(html).toContain('id="flip-y"');
+  });
+
+  // Leaflet / Map mode tests
+  it("Leaflet JS が含まれる", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toContain("leaflet.js");
+  });
+
+  it("Leaflet CSS の link タグがある", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toMatch(/<link\s+rel="stylesheet"\s+href="[^"]*leaflet\.css"/);
+  });
+
+  it("id=\"map\" の div が存在する", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toContain('id="map"');
+  });
+
+  it("id=\"map-mode\" のチェックボックスが存在する", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toContain('id="map-mode"');
+  });
+
+  it("CSP に tile.openstreetmap.org が含まれる", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toContain("tile.openstreetmap.org");
+  });
+
+  it("Swap XY チェックボックスが含まれる", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toContain('id="swap-xy"');
+  });
+
+  it("CSP に img-src と connect-src が含まれる", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toMatch(/img-src\s+https:\/\/tile\.openstreetmap\.org/);
+    expect(html).toMatch(/connect-src\s+https:\/\/tile\.openstreetmap\.org/);
   });
 });

@@ -53,6 +53,7 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
+    "leaflet": "^1.9.4",
     "plotly.js-dist-min": "^3.4.0"
   }
 }
