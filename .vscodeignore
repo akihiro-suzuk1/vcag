@@ -7,6 +7,11 @@ testdata/**
 out/**
 node_modules/**
 !node_modules/plotly.js-dist-min/plotly.min.js
+!node_modules/leaflet/dist/leaflet.js
+!node_modules/leaflet/dist/leaflet.css
+!node_modules/leaflet/dist/images/marker-icon.png
+!node_modules/leaflet/dist/images/marker-icon-2x.png
+!node_modules/leaflet/dist/images/marker-shadow.png
 esbuild.js
 tsconfig.json
 **/*.ts
