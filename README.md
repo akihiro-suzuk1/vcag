@@ -2,7 +2,7 @@
 
 A VS Code extension that extracts coordinate data from selected text and visualizes it as an interactive 2D/3D graph using Plotly.js, with optional map display via Leaflet.js + OpenStreetMap.
 
-**Just select any text containing numbers — no formatting needed.** Works with messy, mixed-format data: debug output, log files, code snippets, whatever. VCAG greedily picks up coordinates from 7+ format patterns so you don't have to clean up your data first.
+**Just select any text containing numbers — no formatting needed.** Works with messy, mixed-format data: debug output, log files, SVG paths, code snippets, whatever. VCAG greedily picks up coordinates from 8+ format patterns so you don't have to clean up your data first.
 
 ## Usage
 
@@ -45,6 +45,10 @@ lat: 35.68, lng: 139.76
 10.0, 20.0
 12.5, 22.3
 
+# SVG path d attribute (M/L/H/V/C/Q/A/Z — curves are interpolated)
+d="M 10 80 C 40 10 65 10 95 80"
+M 0 0 L 100 0 L 100 100 Z
+
 # Space/tab (point clouds, OBJ, PLY, WKT, etc.)
 1.0 2.0 3.0
 
@@ -52,7 +56,7 @@ lat: 35.68, lng: 139.76
 1.5e2, 3.0e-1
 ```
 
-Both 2D and 3D coordinates are automatically detected. Formats can be mixed — VCAG picks up whatever it can find.
+Both 2D and 3D coordinates are automatically detected. Formats can be mixed — VCAG picks up whatever it can find. Bezier curves (C/Q) and arcs (A) in SVG paths are smoothly interpolated rather than reduced to endpoints.
 
 ## Features
 
