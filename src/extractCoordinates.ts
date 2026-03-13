@@ -1,8 +1,11 @@
+import { parseSvgPath } from "./parseSvgPath";
+
 /**
  * テキストから座標情報を正規表現で抽出する。
  * 「数値,数値」「数値,数値,数値」のほか、
  * 「x:数値, y:数値」「X = 数値, Y = 数値, Z = 数値」等のラベル付き形式、
- * JSON 配列 [数値, 数値] / [数値, 数値, 数値] 形式にも対応。
+ * JSON 配列 [数値, 数値] / [数値, 数値, 数値] 形式、
+ * SVG path d 属性にも対応。
  */
 export function extractCoordinates(text: string): number[][] {
   // 数値: 符号付き整数・小数・指数表記
@@ -11,6 +14,45 @@ export function extractCoordinates(text: string): number[][] {
   const unit = /(?:mm|cm|in|ft|m)?/.source;
 
   const matches: { index: number; coords: number[] }[] = [];
+  const consumedRanges: [number, number][] = [];
+
+  // パターン0: SVG path d 属性
+  // 0a: d="..." / d='...' 属性形式
+  const svgAttrPattern = /d=["']([^"']+)["']/g;
+  let m;
+  while ((m = svgAttrPattern.exec(text)) !== null) {
+    const pathData = m[1];
+    const points = parseSvgPath(pathData);
+    if (points.length > 0) {
+      const start = m.index;
+      const end = start + m[0].length;
+      for (const point of points) {
+        matches.push({ index: start, coords: point });
+      }
+      consumedRanges.push([start, end]);
+    }
+  }
+
+  // 0b: ベアパスデータ（M で始まり SVG path コマンド文字を含む）
+  const svgBarePattern = /(?:^|[\s>])([Mm]\s*-?\d[\d\s.eE+\-,]*[LlHhVvCcSsQqTtAaZz][\d\s.eE+\-,MLlHhVvCcSsQqTtAaZz]*)/gm;
+  while ((m = svgBarePattern.exec(text)) !== null) {
+    const pathData = m[1];
+    const fullStart = m.index + (m[0].length - m[1].length);
+    const fullEnd = fullStart + m[1].length;
+    const overlaps = consumedRanges.some(
+      ([s, e]) => fullStart < e && fullEnd > s
+    );
+    if (overlaps) {
+      continue;
+    }
+    const points = parseSvgPath(pathData);
+    if (points.length > 0) {
+      for (const point of points) {
+        matches.push({ index: fullStart, coords: point });
+      }
+      consumedRanges.push([fullStart, fullEnd]);
+    }
+  }
 
   // パターン1: ラベル付き座標 (x:1.0, y:2.0 / lat: 35.68, longitude: 139.76 等)
   const label = /[a-zA-Z]+\s*[:=]\s*/.source;
@@ -19,10 +61,6 @@ export function extractCoordinates(text: string): number[][] {
     `${label}(${num})[ \\t,]+${label}(${num})(?:[ \\t,]+${label}(${num}))?`,
     "g"
   );
-
-  const consumedRanges: [number, number][] = [];
-
-  let m;
   while ((m = labeledPattern.exec(text)) !== null) {
     const coord = [Number(m[1]), Number(m[2])];
     if (m[3] !== undefined) {

@@ -61,6 +61,7 @@
   },
   "dependencies": {
     "leaflet": "^1.9.4",
-    "plotly.js-dist-min": "^3.4.0"
+    "plotly.js-dist-min": "^3.4.0",
+    "svgpath": "^2.6.0"
   }
 }

@@ -277,6 +277,77 @@ describe("extractCoordinates", () => {
     ]);
   });
 
+  // --- SVG path テスト ---
+
+  it("SVG path d属性（ダブルクォート）から座標を抽出する", () => {
+    expect(extractCoordinates(readFixture("svg-path-attr.txt"))).toEqual([
+      [10, 80],
+      [100, 200],
+    ]);
+  });
+
+  it("SVG path d属性（シングルクォート）から座標を抽出する", () => {
+    expect(extractCoordinates("d='M 0 0 L 50 50'")).toEqual([
+      [0, 0],
+      [50, 50],
+    ]);
+  });
+
+  it("ベア SVG path データから座標を抽出する", () => {
+    expect(extractCoordinates(readFixture("svg-path-bare.txt"))).toEqual([
+      [10, 80],
+      [100, 200],
+    ]);
+  });
+
+  it("SVG path 範囲が後続パターンに二重マッチされない", () => {
+    const result = extractCoordinates("d=\"M 10 80 L 100 200\"");
+    expect(result).toEqual([
+      [10, 80],
+      [100, 200],
+    ]);
+    // 2点のみ（スペース区切りパターン等で二重マッチされない）
+    expect(result).toHaveLength(2);
+  });
+
+  it("SVG path + 通常座標の混在テキストを両方抽出する", () => {
+    const text = "d=\"M 10 80 L 100 200\"\npoint: 1,2";
+    expect(extractCoordinates(text)).toEqual([
+      [10, 80],
+      [100, 200],
+      [1, 2],
+    ]);
+  });
+
+  it("SVG path のベジェ曲線を補間して抽出する（制御点座標は含まない）", () => {
+    const result = extractCoordinates("d=\"M 10 80 C 40 10 65 10 95 80\"");
+    // M(1点) + C補間(8点) = 9点
+    expect(result).toHaveLength(9);
+    expect(result[0]).toEqual([10, 80]);
+    expect(result[8]).toEqual([95, 80]);
+    // 制御点 [40,10] [65,10] が直接含まれないこと
+    const hasControlPoint = result.some(
+      (p) => (p[0] === 40 && p[1] === 10) || (p[0] === 65 && p[1] === 10)
+    );
+    expect(hasControlPoint).toBe(false);
+  });
+
+  it("SVG path の相対コマンドを絶対座標に変換して抽出する", () => {
+    expect(extractCoordinates("d=\"m 10 80 l 90 120\"")).toEqual([
+      [10, 80],
+      [100, 200],
+    ]);
+  });
+
+  it("ベア SVG path の H/V 相対コマンドから全端点を抽出する", () => {
+    expect(extractCoordinates("M 50 50 h 50 v 50 h -50")).toEqual([
+      [50, 50],
+      [100, 50],
+      [100, 100],
+      [50, 100],
+    ]);
+  });
+
   it("WKT POLYGON compact 形式（カンマ後スペースなし）の座標を抽出する", () => {
     expect(extractCoordinates(readFixture("wkt-polygon-compact.txt"))).toEqual([
       [0.0, 10000.0],
