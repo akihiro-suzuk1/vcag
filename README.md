@@ -4,6 +4,10 @@ A VS Code extension that extracts coordinate data from selected text and visuali
 
 **Just select any text containing numbers — no formatting needed.** Works with messy, mixed-format data: debug output, log files, SVG paths, code snippets, whatever. VCAG greedily picks up coordinates from 8+ format patterns so you don't have to clean up your data first.
 
+| 2D — Rose Curve | 3D — Spherical Spiral |
+|:---:|:---:|
+| ![2D plot of a rose curve](vcag-2d.png) | ![3D plot of a spherical spiral](vcag-3d.png) |
+
 ## Usage
 
 ### From selection (editor)
