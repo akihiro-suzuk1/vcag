@@ -113,8 +113,18 @@ export function getWebviewContent(
       font-family: var(--vscode-font-family);
       font-size: var(--vscode-font-size);
     }
-    #toggle-dim:hover {
+    #toggle-dim:hover, #add-clipboard:hover {
       background: var(--vscode-button-hoverBackground);
+    }
+    #add-clipboard {
+      padding: 4px 12px;
+      cursor: pointer;
+      border: 1px solid var(--vscode-button-border, transparent);
+      border-radius: 2px;
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+      font-family: var(--vscode-font-family);
+      font-size: var(--vscode-font-size);
     }
     #toolbar label {
       font-family: var(--vscode-font-family);
@@ -126,6 +136,59 @@ export function getWebviewContent(
     #toolbar label input {
       margin-right: 4px;
     }
+    #clipboard-confirm {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    #clipboard-confirm-inner {
+      background: var(--vscode-editor-background);
+      border: 1px solid var(--vscode-panel-border, #444);
+      border-radius: 4px;
+      padding: 16px;
+      max-width: 80vw;
+      max-height: 60vh;
+      overflow: auto;
+      font-family: var(--vscode-font-family);
+      font-size: var(--vscode-font-size);
+      color: var(--vscode-editor-foreground);
+    }
+    #clipboard-preview {
+      background: var(--vscode-textCodeBlock-background, #1a1a1a);
+      padding: 8px;
+      border-radius: 2px;
+      max-height: 30vh;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-size: 12px;
+    }
+    #clipboard-confirm-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      justify-content: flex-end;
+    }
+    #clipboard-ok, #clipboard-cancel {
+      padding: 4px 16px;
+      cursor: pointer;
+      border: 1px solid var(--vscode-button-border, transparent);
+      border-radius: 2px;
+      font-family: var(--vscode-font-family);
+      font-size: var(--vscode-font-size);
+    }
+    #clipboard-ok {
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+    }
+    #clipboard-cancel {
+      background: var(--vscode-button-secondaryBackground, transparent);
+      color: var(--vscode-button-secondaryForeground, var(--vscode-editor-foreground));
+    }
   </style>
 </head>
 <body>
@@ -136,6 +199,17 @@ export function getWebviewContent(
     <label><input type="checkbox" id="swap-xy" /> Swap XY</label>
     <label><input type="checkbox" id="flip-y" /> Flip Y</label>
     <label><input type="checkbox" id="map-mode" /> Map</label>
+    <button id="add-clipboard">Add Clipboard Data</button>
+  </div>
+  <div id="clipboard-confirm" style="display:none;">
+    <div id="clipboard-confirm-inner">
+      <p>Add this data to the graph?</p>
+      <pre id="clipboard-preview"></pre>
+      <div id="clipboard-confirm-buttons">
+        <button id="clipboard-ok">Add</button>
+        <button id="clipboard-cancel">Cancel</button>
+      </div>
+    </div>
   </div>
   <div id="chart"></div>
   <div id="map"></div>
@@ -152,8 +226,15 @@ export function getWebviewContent(
     const swapXYCb = document.getElementById('swap-xy');
     const flipYCb = document.getElementById('flip-y');
     const mapModeCb = document.getElementById('map-mode');
+    const addClipboardBtn = document.getElementById('add-clipboard');
+    const clipboardConfirm = document.getElementById('clipboard-confirm');
+    const clipboardPreview = document.getElementById('clipboard-preview');
+    const clipboardOk = document.getElementById('clipboard-ok');
+    const clipboardCancel = document.getElementById('clipboard-cancel');
     const chartEl = document.getElementById('chart');
     const mapEl = document.getElementById('map');
+
+    let pendingClipboardText = null;
 
     let connectLines = true;
     let closeLoop = false;
@@ -164,6 +245,9 @@ export function getWebviewContent(
     let mapMarkers = [];
     let mapPolyline = null;
 
+    const traceColors = ['#4dc9f6','#f67019','#f53794','#537bc4','#acc236','#166a8f','#00a950','#58595b','#8549ba'];
+    const datasets = [${data}];
+
     if (dataDim === '3D') {
       toggleBtn.style.display = 'inline-block';
     }
@@ -171,7 +255,7 @@ export function getWebviewContent(
     toggleBtn.addEventListener('click', () => {
       currentViewAs = currentViewAs === '3D' ? '2D' : '3D';
       toggleBtn.textContent = currentViewAs === '3D' ? 'Show as XY 2D' : 'Show as 3D';
-      render(${data}, currentViewAs);
+      renderAll(currentViewAs);
     });
 
     connectLinesCb.addEventListener('change', () => {
@@ -183,28 +267,45 @@ export function getWebviewContent(
       } else {
         closeLoopCb.disabled = false;
       }
-      render(${data}, currentViewAs);
+      renderAll(currentViewAs);
     });
 
     closeLoopCb.addEventListener('change', () => {
       closeLoop = closeLoopCb.checked;
-      render(${data}, currentViewAs);
+      renderAll(currentViewAs);
     });
 
     swapXYCb.addEventListener('change', () => {
       swapXY = swapXYCb.checked;
-      render(${data}, currentViewAs);
+      renderAll(currentViewAs);
     });
 
     flipYCb.addEventListener('change', () => {
       flipY = flipYCb.checked;
-      render(${data}, currentViewAs);
+      renderAll(currentViewAs);
     });
 
     mapModeCb.addEventListener('change', () => {
       mapMode = mapModeCb.checked;
       updateToolbarVisibility();
-      render(${data}, currentViewAs);
+      renderAll(currentViewAs);
+    });
+
+    addClipboardBtn.addEventListener('click', () => {
+      vscode.postMessage({ type: 'requestClipboardData' });
+    });
+
+    clipboardOk.addEventListener('click', () => {
+      if (pendingClipboardText !== null) {
+        vscode.postMessage({ type: 'confirmClipboardData', text: pendingClipboardText });
+        pendingClipboardText = null;
+      }
+      clipboardConfirm.style.display = 'none';
+    });
+
+    clipboardCancel.addEventListener('click', () => {
+      pendingClipboardText = null;
+      clipboardConfirm.style.display = 'none';
     });
 
     function updateToolbarVisibility() {
@@ -223,12 +324,13 @@ export function getWebviewContent(
       }
     }
 
-    function render(coords, viewAs) {
-      const c = swapXY ? coords.map(p => [p[1], p[0]].concat(p.slice(2))) : coords;
+    function renderAll(viewAs) {
       if (mapMode) {
+        const allCoords = datasets.flat();
+        const c = swapXY ? allCoords.map(p => [p[1], p[0]].concat(p.slice(2))) : allCoords;
         renderMap(c);
       } else {
-        renderPlotly(c, viewAs);
+        renderPlotlyMulti(datasets, viewAs);
       }
     }
 
@@ -284,7 +386,7 @@ export function getWebviewContent(
       }, 100);
     }
 
-    function renderPlotly(coords, viewAs) {
+    function renderPlotlyMulti(allDatasets, viewAs) {
       const fg = getComputedStyle(document.body)
         .getPropertyValue('--vscode-editor-foreground').trim() || '#cccccc';
       const bg = getComputedStyle(document.body)
@@ -292,27 +394,34 @@ export function getWebviewContent(
 
       const is3D = viewAs === '3D';
 
-      let drawCoords = coords;
-      if (connectLines && closeLoop && coords.length > 0) {
-        drawCoords = coords.concat([coords[0]]);
-      }
+      const traces = allDatasets.map((coords, idx) => {
+        const c = swapXY ? coords.map(p => [p[1], p[0]].concat(p.slice(2))) : coords;
+        let drawCoords = c;
+        if (connectLines && closeLoop && c.length > 0) {
+          drawCoords = c.concat([c[0]]);
+        }
 
-      const trace = {
-        type: is3D ? 'scatter3d' : 'scatter',
-        mode: connectLines ? 'lines+markers' : 'markers',
-        marker: { size: is3D ? 4 : 8, color: '#4dc9f6' },
-        name: viewAs + ' (' + coords.length + ' points)',
-        x: drawCoords.map(c => c[0]),
-        y: drawCoords.map(c => c[1]),
-      };
+        const color = traceColors[idx % traceColors.length];
+        const label = idx === 0 ? 'Original' : 'Added #' + idx;
+        const trace = {
+          type: is3D ? 'scatter3d' : 'scatter',
+          mode: connectLines ? 'lines+markers' : 'markers',
+          marker: { size: is3D ? 4 : 8, color: color },
+          name: label + ' (' + coords.length + ' pts)',
+          x: drawCoords.map(p => p[0]),
+          y: drawCoords.map(p => p[1]),
+        };
 
-      if (connectLines) {
-        trace.line = { width: 1, color: '#4dc9f6' };
-      }
+        if (connectLines) {
+          trace.line = { width: 1, color: color };
+        }
 
-      if (is3D) {
-        trace.z = drawCoords.map(c => c[2]);
-      }
+        if (is3D) {
+          trace.z = drawCoords.map(p => p[2]);
+        }
+
+        return trace;
+      });
 
       const axisColor = fg + '80';
 
@@ -321,6 +430,7 @@ export function getWebviewContent(
         plot_bgcolor: bg,
         font: { color: axisColor },
         margin: { l: 50, r: 20, t: 30, b: 50 },
+        showlegend: allDatasets.length > 1,
       };
 
       if (!is3D) {
@@ -334,20 +444,30 @@ export function getWebviewContent(
         };
       }
 
-      Plotly.react('chart', [trace], layout, { responsive: true });
+      Plotly.react('chart', traces, layout, { responsive: true });
     }
 
     // Initial render with embedded data
-    render(${data}, currentViewAs);
+    renderAll(currentViewAs);
 
     // Listen for update messages
     window.addEventListener('message', (event) => {
       const msg = event.data;
       if (msg.type === 'render') {
+        datasets.length = 0;
+        datasets.push(msg.coords);
         currentViewAs = msg.dim;
         toggleBtn.textContent = currentViewAs === '3D' ? 'Show as XY 2D' : 'Show as 3D';
         toggleBtn.style.display = msg.dim === '3D' ? 'inline-block' : 'none';
-        render(msg.coords, msg.dim);
+        renderAll(msg.dim);
+      } else if (msg.type === 'clipboardPreview') {
+        const preview = msg.text.length > 500 ? msg.text.slice(0, 500) + '...' : msg.text;
+        clipboardPreview.textContent = preview;
+        pendingClipboardText = msg.text;
+        clipboardConfirm.style.display = 'flex';
+      } else if (msg.type === 'addCoords') {
+        datasets.push(msg.coords);
+        renderAll(currentViewAs);
       }
     });
   </script>

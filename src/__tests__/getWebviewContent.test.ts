@@ -102,8 +102,8 @@ describe("getWebviewContent", () => {
       [[1, 2]],
       "2D"
     );
-    // Initial render call uses currentViewAs variable
-    expect(html).toMatch(/render\(\[\[1,2\]\],\s*currentViewAs\)/);
+    // Initial render call uses renderAll
+    expect(html).toMatch(/renderAll\(\s*currentViewAs\)/);
   });
 
   it("3D では scatter3d タイプが使用される", () => {
@@ -115,8 +115,8 @@ describe("getWebviewContent", () => {
     );
     // render function contains scatter3d logic
     expect(html).toContain("scatter3d");
-    // Initial render call uses "3D"
-    expect(html).toMatch(/render\(\[\[1,2,3\]\],\s*currentViewAs\)/);
+    // Initial render call uses renderAll
+    expect(html).toMatch(/renderAll\(\s*currentViewAs\)/);
   });
 
   it("3D 時にトグルボタンが含まれる", () => {

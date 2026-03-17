@@ -26,6 +26,28 @@ function showGraph(
     panel.onDidDispose(() => {
       panel = undefined;
     });
+    panel.webview.onDidReceiveMessage(async (msg) => {
+      if (msg.type === "requestClipboardData") {
+        const text = await vscode.env.clipboard.readText();
+        if (!text) {
+          vscode.window.showWarningMessage("Clipboard is empty");
+          return;
+        }
+        panel?.webview.postMessage({
+          type: "clipboardPreview",
+          text,
+        });
+      } else if (msg.type === "confirmClipboardData") {
+        const newCoords = extractCoordinates(msg.text);
+        if (newCoords.length === 0) {
+          vscode.window.showWarningMessage(
+            "No coordinates found in clipboard"
+          );
+          return;
+        }
+        panel?.webview.postMessage({ type: "addCoords", coords: newCoords });
+      }
+    });
   }
 
   panel.webview.html = getWebviewContent(
