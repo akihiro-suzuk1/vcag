@@ -2,7 +2,7 @@
   "name": "vcag",
   "displayName": "VCAG - Coordinate Graph & Map Viewer",
   "description": "Just select messy text containing numbers — no formatting needed. Extracts coordinates and visualizes as 2D/3D graph (Plotly) or map (Leaflet + OpenStreetMap)",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/akihiro-suzuk1/vcag.git"
