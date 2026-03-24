@@ -13,5 +13,6 @@ VERSION=$(node -p "require('./package.json').version")
 VSIX="vcag-${VERSION}.vsix"
 
 ovsx publish "$VSIX"
+vsce publish --packagePath "$VSIX"
 git push origin main --tags
 gh release create "v${VERSION}" "$VSIX" --title "v${VERSION}" --target main

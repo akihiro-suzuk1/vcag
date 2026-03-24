@@ -57,8 +57,8 @@ describe("getWebviewContent", () => {
     expect(html).toContain("default-src 'none'");
     expect(html).toMatch(/script-src 'nonce-[0-9a-f]{32}'/);
     expect(html).toContain("style-src 'unsafe-inline'");
-    expect(html).toContain("img-src https://tile.openstreetmap.org");
-    expect(html).toContain("connect-src https://tile.openstreetmap.org");
+    expect(html).toContain("img-src https://*.basemaps.cartocdn.com");
+    expect(html).toContain("connect-src https://*.basemaps.cartocdn.com");
   });
 
   it("座標データが埋め込まれる", () => {
@@ -236,14 +236,14 @@ describe("getWebviewContent", () => {
     expect(html).toContain('id="map-mode"');
   });
 
-  it("CSP に tile.openstreetmap.org が含まれる", () => {
+  it("CSP に basemaps.cartocdn.com が含まれる", () => {
     const html = getWebviewContent(
       createMockWebview(),
       extensionUri,
       [[1, 2]],
       "2D"
     );
-    expect(html).toContain("tile.openstreetmap.org");
+    expect(html).toContain("basemaps.cartocdn.com");
   });
 
   it("Swap XY チェックボックスが含まれる", () => {
@@ -263,7 +263,7 @@ describe("getWebviewContent", () => {
       [[1, 2]],
       "2D"
     );
-    expect(html).toMatch(/img-src\s+https:\/\/tile\.openstreetmap\.org/);
-    expect(html).toMatch(/connect-src\s+https:\/\/tile\.openstreetmap\.org/);
+    expect(html).toMatch(/img-src\s+https:\/\/\*\.basemaps\.cartocdn\.com/);
+    expect(html).toMatch(/connect-src\s+https:\/\/\*\.basemaps\.cartocdn\.com/);
   });
 });
