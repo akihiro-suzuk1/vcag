@@ -54,8 +54,9 @@ export function extractCoordinates(text: string): number[][] {
     }
   }
 
-  // パターン1: ラベル付き座標 (x:1.0, y:2.0 / lat: 35.68, longitude: 139.76 等)
-  const label = /[a-zA-Z]+\s*[:=]\s*/.source;
+  // パターン1: ラベル付き座標 (x:1.0, y:2.0 / "lat": 35.68 / \"lon\": 139.76 等)
+  // JSON の引用符・エスケープ引用符（\"key\":）も許容する
+  const label = /(?:\\?")?[a-zA-Z]+(?:\\?")?\s*[:=]\s*/.source;
   // 区切りはスペース・タブ・カンマのみ（改行で座標セットを分離）
   const labeledPattern = new RegExp(
     `${label}(${num})[ \\t,]+${label}(${num})(?:[ \\t,]+${label}(${num}))?`,
