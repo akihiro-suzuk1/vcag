@@ -236,6 +236,46 @@ describe("getWebviewContent", () => {
     expect(html).toContain('id="map-mode"');
   });
 
+  it("Index Label チェックボックスが Map の右隣にある", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toMatch(
+      /id="map-mode"[^>]*>\s*Map<\/label>\s*<label><input type="checkbox" id="index-label"/
+    );
+  });
+
+  it("Index Label は初期状態でオフ", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).not.toMatch(/id="index-label"[^>]*checked/);
+  });
+
+  it("Index Label オン時に 1 始まりの点ラベルを描画する", () => {
+    const html = getWebviewContent(
+      createMockWebview(),
+      extensionUri,
+      [[1, 2]],
+      "2D"
+    );
+    expect(html).toContain("showIndexLabels");
+    expect(html).toContain("markers+text");
+    expect(html).toContain("i + 1");
+    expect(html).toContain("bindTooltip");
+    expect(html).toContain("permanent: true");
+    expect(html).toContain("computeLabelPlacements");
+    expect(html).toContain("computePixelLabelPlacements");
+    expect(html).toContain("bottom center");
+    expect(html).toContain("middle right");
+  });
+
   it("CSP に basemaps.cartocdn.com が含まれる", () => {
     const html = getWebviewContent(
       createMockWebview(),

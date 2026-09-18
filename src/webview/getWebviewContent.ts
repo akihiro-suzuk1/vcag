@@ -96,6 +96,16 @@ export function getWebviewContent(
       height: 90vh;
       display: none;
     }
+    .leaflet-tooltip {
+      padding: 2px 6px;
+      font-size: 11px;
+    }
+    .leaflet-tooltip-top:before,
+    .leaflet-tooltip-bottom:before,
+    .leaflet-tooltip-left:before,
+    .leaflet-tooltip-right:before {
+      display: none;
+    }
     #toolbar {
       display: flex;
       align-items: center;
@@ -199,6 +209,7 @@ export function getWebviewContent(
     <label><input type="checkbox" id="swap-xy" /> Swap XY</label>
     <label><input type="checkbox" id="flip-y" /> Flip Y</label>
     <label><input type="checkbox" id="map-mode" /> Map</label>
+    <label><input type="checkbox" id="index-label" /> Index Label</label>
     <button id="add-clipboard">Add Clipboard Data</button>
   </div>
   <div id="clipboard-confirm" style="display:none;">
@@ -226,6 +237,7 @@ export function getWebviewContent(
     const swapXYCb = document.getElementById('swap-xy');
     const flipYCb = document.getElementById('flip-y');
     const mapModeCb = document.getElementById('map-mode');
+    const indexLabelCb = document.getElementById('index-label');
     const addClipboardBtn = document.getElementById('add-clipboard');
     const clipboardConfirm = document.getElementById('clipboard-confirm');
     const clipboardPreview = document.getElementById('clipboard-preview');
@@ -241,8 +253,11 @@ export function getWebviewContent(
     let swapXY = false;
     let flipY = false;
     let mapMode = false;
+    let showIndexLabels = false;
     let leafletMap = null;
     let mapMarkers = [];
+    let mapLabelTexts = [];
+    let mapZoomBound = false;
     let mapPolyline = null;
 
     const traceColors = ['#4dc9f6','#f67019','#f53794','#537bc4','#acc236','#166a8f','#00a950','#58595b','#8549ba'];
@@ -291,6 +306,11 @@ export function getWebviewContent(
       renderAll(currentViewAs);
     });
 
+    indexLabelCb.addEventListener('change', () => {
+      showIndexLabels = indexLabelCb.checked;
+      renderAll(currentViewAs);
+    });
+
     addClipboardBtn.addEventListener('click', () => {
       vscode.postMessage({ type: 'requestClipboardData' });
     });
@@ -324,17 +344,134 @@ export function getWebviewContent(
       }
     }
 
+    function computeLabelPlacements(coords, dims) {
+      // Keep in sync with src/labelPlacement.ts
+      const textPositions = [
+        'top center', 'bottom center', 'middle right', 'middle left',
+        'top right', 'top left', 'bottom right', 'bottom left',
+      ];
+      const keys = coords.map((p) => p.slice(0, dims).join(','));
+      const counts = new Map();
+      keys.forEach((key) => {
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      });
+      const seen = new Map();
+      return keys.map((key) => {
+        const indexInGroup = seen.get(key) ?? 0;
+        seen.set(key, indexInGroup + 1);
+        const count = counts.get(key);
+        let mapDirection = 'top';
+        let mapOffset = [0, -28];
+        if (count > 1) {
+          const radius = Math.max(40, Math.ceil(count * 7));
+          const angle = (2 * Math.PI * indexInGroup) / count - Math.PI / 2;
+          mapDirection = 'center';
+          mapOffset = [
+            Math.round(Math.cos(angle) * radius),
+            Math.round(Math.sin(angle) * radius) - 20,
+          ];
+        }
+        return {
+          textposition: textPositions[indexInGroup % textPositions.length],
+          mapDirection: mapDirection,
+          mapOffset: mapOffset,
+        };
+      });
+    }
+
+    function computePixelLabelPlacements(points, threshold) {
+      // Keep in sync with src/labelPlacement.ts
+      if (threshold === undefined) {
+        threshold = 56;
+      }
+      const n = points.length;
+      const parent = points.map((_, i) => i);
+      const find = (i) => {
+        if (parent[i] !== i) {
+          parent[i] = find(parent[i]);
+        }
+        return parent[i];
+      };
+      const union = (a, b) => {
+        const pa = find(a);
+        const pb = find(b);
+        if (pa !== pb) {
+          parent[pa] = pb;
+        }
+      };
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          if (Math.hypot(points[i].x - points[j].x, points[i].y - points[j].y) < threshold) {
+            union(i, j);
+          }
+        }
+      }
+      const groups = new Map();
+      for (let i = 0; i < n; i++) {
+        const root = find(i);
+        const members = groups.get(root) ?? [];
+        members.push(i);
+        groups.set(root, members);
+      }
+      const result = points.map(() => ({ mapDirection: 'top', mapOffset: [0, -28] }));
+      groups.forEach((members) => {
+        if (members.length === 1) {
+          return;
+        }
+        const cx = members.reduce((sum, i) => sum + points[i].x, 0) / members.length;
+        const cy = members.reduce((sum, i) => sum + points[i].y, 0) / members.length;
+        const clusterSpread = Math.max(
+          ...members.map((i) => Math.hypot(points[i].x - cx, points[i].y - cy))
+        );
+        const radius = Math.max(48, clusterSpread + 36, members.length * 10);
+        members.forEach((i, k) => {
+          const angle = (2 * Math.PI * k) / members.length - Math.PI / 2;
+          const lx = cx + Math.cos(angle) * radius;
+          const ly = cy + Math.sin(angle) * radius - 20;
+          result[i] = {
+            mapDirection: 'center',
+            mapOffset: [
+              Math.round(lx - points[i].x),
+              Math.round(ly - points[i].y),
+            ],
+          };
+        });
+      });
+      return result;
+    }
+
+    function applyMapIndexLabels() {
+      mapMarkers.forEach((m) => {
+        m.unbindTooltip();
+      });
+      if (!showIndexLabels || !leafletMap) {
+        return;
+      }
+      const pts = mapMarkers.map((m) => {
+        const ll = m.getLatLng();
+        const p = leafletMap.latLngToLayerPoint(ll);
+        return { x: p.x, y: p.y };
+      });
+      const placements = computePixelLabelPlacements(pts);
+      mapMarkers.forEach((m, i) => {
+        const place = placements[i];
+        m.bindTooltip(mapLabelTexts[i], {
+          permanent: true,
+          direction: place.mapDirection,
+          offset: place.mapOffset,
+        });
+      });
+    }
+
     function renderAll(viewAs) {
       if (mapMode) {
-        const allCoords = datasets.flat();
-        const c = swapXY ? allCoords.map(p => [p[1], p[0]].concat(p.slice(2))) : allCoords;
-        renderMap(c);
+        renderMap(datasets);
       } else {
         renderPlotlyMulti(datasets, viewAs);
       }
     }
 
-    function renderMap(coords) {
+    function renderMap(allDatasets) {
       if (!leafletMap) {
         leafletMap = L.map('map');
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -360,17 +497,22 @@ export function getWebviewContent(
         mapPolyline = null;
       }
 
-      if (coords.length === 0) return;
-
-      // Interpret coords as [lat, lng]
-      const latLngs = coords.map(c => [c[0], c[1]]);
-
-      latLngs.forEach((ll, i) => {
-        const marker = L.marker(ll)
-          .addTo(leafletMap)
-          .bindPopup('Point ' + i + ': [' + ll[0] + ', ' + ll[1] + ']');
-        mapMarkers.push(marker);
+      const latLngs = [];
+      mapLabelTexts = [];
+      allDatasets.forEach((coords) => {
+        const c = swapXY ? coords.map(p => [p[1], p[0]].concat(p.slice(2))) : coords;
+        c.forEach((p, i) => {
+          const ll = [p[0], p[1]];
+          latLngs.push(ll);
+          mapLabelTexts.push(String(i + 1));
+          const marker = L.marker(ll)
+            .addTo(leafletMap)
+            .bindPopup('Point ' + (i + 1) + ': [' + ll[0] + ', ' + ll[1] + ']');
+          mapMarkers.push(marker);
+        });
       });
+
+      if (latLngs.length === 0) return;
 
       if (connectLines) {
         let lineCoords = latLngs.slice();
@@ -382,8 +524,14 @@ export function getWebviewContent(
 
       leafletMap.fitBounds(L.latLngBounds(latLngs));
 
+      if (!mapZoomBound) {
+        leafletMap.on('zoomend', applyMapIndexLabels);
+        mapZoomBound = true;
+      }
+
       setTimeout(() => {
         leafletMap.invalidateSize();
+        applyMapIndexLabels();
       }, 100);
     }
 
@@ -404,13 +552,25 @@ export function getWebviewContent(
 
         const color = traceColors[idx % traceColors.length];
         const label = idx === 0 ? 'Original' : 'Added #' + idx;
+        const indexTexts = c.map((_, i) => String(i + 1));
+        const placements = showIndexLabels ? computeLabelPlacements(c, is3D ? 3 : 2) : [];
+        const textpositions = placements.map(p => p.textposition);
+        if (drawCoords.length > c.length) {
+          indexTexts.push('');
+          textpositions.push('top center');
+        }
         const trace = {
           type: is3D ? 'scatter3d' : 'scatter',
-          mode: connectLines ? 'lines+markers' : 'markers',
+          mode: showIndexLabels
+            ? (connectLines ? 'lines+markers+text' : 'markers+text')
+            : (connectLines ? 'lines+markers' : 'markers'),
           marker: { size: is3D ? 4 : 8, color: color },
           name: label + ' (' + coords.length + ' pts)',
           x: drawCoords.map(p => p[0]),
           y: drawCoords.map(p => p[1]),
+          text: showIndexLabels ? indexTexts : undefined,
+          textposition: showIndexLabels ? textpositions : 'top center',
+          textfont: { size: 10, color: fg },
         };
 
         if (connectLines) {
