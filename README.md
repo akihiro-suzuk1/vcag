@@ -70,6 +70,7 @@ Both 2D and 3D coordinates are automatically detected. Formats can be mixed — 
 - **Swap XY** — Swap X and Y values (useful for lat/lng reordering)
 - **Flip Y** — Reverse Y-axis (useful for screen coordinates)
 - **Map mode** — Display coordinates on an OpenStreetMap tile layer using Leaflet.js (toggle with the Map checkbox)
+- **Index Label** — Show 1-based point indices on the graph and map (toggle with the Index Label checkbox). Nearby map labels are spread so they stay readable.
 
 ## Installation
 
