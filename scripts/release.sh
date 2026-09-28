@@ -6,6 +6,12 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
+git fetch origin main
+if [ "$(git rev-list --count HEAD..origin/main)" -gt 0 ]; then
+  echo "origin/main has commits not in HEAD. Pull them before releasing."
+  exit 1
+fi
+
 npm version "$1"
 npm run build
 
