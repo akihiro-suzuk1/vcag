@@ -57,8 +57,8 @@ describe("getWebviewContent", () => {
     expect(html).toContain("default-src 'none'");
     expect(html).toMatch(/script-src 'nonce-[0-9a-f]{32}'/);
     expect(html).toContain("style-src 'unsafe-inline'");
-    expect(html).toContain("img-src https://*.basemaps.cartocdn.com");
-    expect(html).toContain("connect-src https://*.basemaps.cartocdn.com");
+    expect(html).toContain("img-src https://server.arcgisonline.com");
+    expect(html).toContain("connect-src https://server.arcgisonline.com");
   });
 
   it("座標データが埋め込まれる", () => {
@@ -276,14 +276,14 @@ describe("getWebviewContent", () => {
     expect(html).toContain("middle right");
   });
 
-  it("CSP に basemaps.cartocdn.com が含まれる", () => {
+  it("CSP に server.arcgisonline.com が含まれる", () => {
     const html = getWebviewContent(
       createMockWebview(),
       extensionUri,
       [[1, 2]],
       "2D"
     );
-    expect(html).toContain("basemaps.cartocdn.com");
+    expect(html).toContain("server.arcgisonline.com");
   });
 
   it("Swap XY チェックボックスが含まれる", () => {
@@ -303,7 +303,7 @@ describe("getWebviewContent", () => {
       [[1, 2]],
       "2D"
     );
-    expect(html).toMatch(/img-src\s+https:\/\/\*\.basemaps\.cartocdn\.com/);
-    expect(html).toMatch(/connect-src\s+https:\/\/\*\.basemaps\.cartocdn\.com/);
+    expect(html).toMatch(/img-src\s+https:\/\/server\.arcgisonline\.com/);
+    expect(html).toMatch(/connect-src\s+https:\/\/server\.arcgisonline\.com/);
   });
 });

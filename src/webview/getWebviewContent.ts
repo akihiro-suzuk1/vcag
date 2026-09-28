@@ -75,7 +75,7 @@ export function getWebviewContent(
   <meta charset="UTF-8" />
   <meta
     http-equiv="Content-Security-Policy"
-    content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline' ${webview.cspSource}; img-src https://*.basemaps.cartocdn.com ${webview.cspSource}; connect-src https://*.basemaps.cartocdn.com;"
+    content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline' ${webview.cspSource}; img-src https://server.arcgisonline.com ${webview.cspSource}; connect-src https://server.arcgisonline.com;"
   />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Coord Graph</title>
@@ -474,10 +474,9 @@ export function getWebviewContent(
     function renderMap(allDatasets) {
       if (!leafletMap) {
         leafletMap = L.map('map');
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
-          subdomains: 'abcd',
-          maxZoom: 20,
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+          attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a>',
+          maxZoom: 18,
         }).addTo(leafletMap);
       }
 
